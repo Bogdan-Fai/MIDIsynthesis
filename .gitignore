@@ -8,7 +8,8 @@ __pycache__/
 
 # Data
 Data/*
-!Data/sample.mid
+!Data/test.mid
+!Data/readme.txt
 
 # OS
 .DS_Store
