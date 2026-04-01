@@ -1,4 +1,5 @@
 from ctypes import sizeof
+from fractions import Fraction
 from music21 import converter, note, chord
 
 def mid2txt(midi_file, txt_file=""):
@@ -38,11 +39,11 @@ def txt2mid(txt_file: str = "", midi_file: str = "", text:str=[]):
 
     Supported token format (one token per line):
       - Note:  C4_0.5
-      - Chord: C4.E4.G4
+      - Chord: C4_E4_G4_0.5
 
     You can pass either:
       - txt_file="path/to/file.txt"
-      - OR text=[ "C4_0.5", "C4.E4.G4", ... ]
+      - OR text=[ "C4_0.5", "C4_E4_G4_0.5", ... ]
     """
 
     # determine output midi path
@@ -72,14 +73,40 @@ def txt2mid(txt_file: str = "", midi_file: str = "", text:str=[]):
     s = stream.Stream()
 
     for tok in tokens:
-        if  "." in tok:  # chord like C4.E4.G4
+        if tok.split("_").__len__() == 2:  # note like C4_0.5
             n = note.Note(tok.split(" ")[0])
             n.quarterLength = float(tok.split(" ")[1])
             s.append(n)
-
-        else:  # single note like C4
-            pitches = tok.split(" ")
+        elif tok.split("_").__len__() > 2:  # chord like C4_E4_G4_0.5
+            parts = tok.split("_")
+            dur = float(parts[-1])
+            pitches = parts[:-1]
             c = chord.Chord(pitches)
+            c.quarterLength = dur
             s.append(c)
 
     s.write("midi", fp=midi_file)
+
+def make_midi_stream(tokens):
+    if not tokens:
+        return None
+    from music21 import stream, note, chord, duration
+    s = stream.Stream()
+
+    for tok in tokens:
+        if tok.split("_").__len__() == 2:  # note like C4_0.5
+            n = note.Note(pitch=tok.split("_")[0])
+            if tok.split("_")[1].find("/") != -1:
+                n.quarterLength = Fraction(int(tok.split("_")[1].split("/")[0]), int(tok.split("_")[1].split("/")[1]))
+            else:
+                n.quarterLength = float(tok.split("_")[1])
+            s.append(n)
+        elif tok.split("_").__len__() > 2:  # chord like C4_E4_G4_0.5
+            parts = tok.split("_")
+            dur = float(parts[-1])
+            pitches = parts[:-1]
+            c = chord.Chord(pitches)
+            c.quarterLength = dur
+            s.append(c)
+
+    return s

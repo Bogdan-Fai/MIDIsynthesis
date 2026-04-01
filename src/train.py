@@ -15,20 +15,24 @@ def load_vocab(path: str):
     return stoi, itos
 
 
-def train():
-    print("Starting training...")
+def train(task=None):
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger = task.get_logger() if task is not None else None
 
-    print("Loading data...")
     token_ids = np.load("Data/token_ids.npy").tolist()
     stoi, itos = load_vocab("Data/vocab.json")
 
-    block_size = 128
-    batch_size = 32
-    epochs = 10
-    lr = 3e-4
+    config = {
+        "block_size": 128,
+        "batch_size": 32,
+        "epochs": 10,
+        "lr": 3e-4
+    }
 
-    dataset = MIDIDataset(token_ids, block_size)
+    if task is not None:
+        task.connect(config)
+
+    dataset = MIDIDataset(token_ids, config["block_size"])
 
     print(f"Dataset size: {len(dataset)}")
     train_size = int(0.9 * len(dataset))
@@ -36,27 +40,27 @@ def train():
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
     print(f"Training set size: {len(train_dataset)}")
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"])
 
-    print("Initializing model...")
     model = MIDITransformer(
         vocab_size=len(stoi),
         d_model=256,
-        block_size=block_size,
+        block_size=config["block_size"],
         n_heads=8,
         n_layers=4,
         dropout=0.2,
     ).to(device)
 
-    print("Starting training...")
-    optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"])
 
-    for epoch in range(epochs):
+    for epoch in range(config["epochs"]):
+        print(f"Epoch {epoch + 1}/{config['epochs']}")
+        logger.report_text(f"Epoch {epoch + 1}/{config['epochs']}") if logger else None
         model.train()
         train_loss_sum = 0.0
 
-        for x, y in train_loader:
+        for step, (x, y) in enumerate(train_loader):
             x = x.to(device)
             y = y.to(device)
 
@@ -67,6 +71,12 @@ def train():
             optimizer.step()
 
             train_loss_sum += loss.item()
+
+            if step % 50 == 0:
+                print(f"step {step}/{len(train_loader)} | "
+                    f"loss={loss.item():.4f}"
+                )
+                logger.report_scalar("train_loss", loss.item(), step=epoch * len(train_loader) + step) if logger else None
 
         avg_train_loss = train_loss_sum / len(train_loader)
 
@@ -84,7 +94,7 @@ def train():
         avg_val_loss = val_loss_sum / len(val_loader)
 
         print(
-            f"Epoch {epoch + 1}/{epochs} | "
+            f"Epoch {epoch + 1}/{config['epochs']} | "
             f"train_loss={avg_train_loss:.4f} | "
             f"val_loss={avg_val_loss:.4f}"
         )

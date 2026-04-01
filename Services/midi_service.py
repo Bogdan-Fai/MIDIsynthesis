@@ -10,6 +10,18 @@ def play_midi(path):
     while pygame.mixer.music.get_busy():
         continue
 
+def play_midi_from_stream(s):
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mid") as tmp:
+        s.write("midi", fp=tmp.name)
+        play_midi(tmp.name)
+        os.unlink(tmp.name)
+
+def save_midi_from_stream(s, path="output.mid"):
+    s.write("midi", fp=path)
+
 def see_notes(path):
     from music21 import converter, note, chord
 

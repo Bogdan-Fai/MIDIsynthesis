@@ -16,26 +16,28 @@ class Head(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, T, C = x.shape
 
-        k = self.key(x)     # (B, T, head_size)
-        q = self.query(x)   # (B, T, head_size)
+        k = self.key(x)
+        q = self.query(x)
 
-        wei = q @ k.transpose(-2, -1) * (k.shape[-1] ** -0.5)  # (B, T, T)
+        wei = q @ k.transpose(-2, -1) * (k.shape[-1] ** -0.5)
         wei = wei.masked_fill(self.tril[:T, :T] == 0, float("-inf"))
         wei = F.softmax(wei, dim=-1)
         wei = self.dropout(wei)
 
         v = self.value(x)
-        out = wei @ v  # (B, T, head_size)
+        out = wei @ v
         return out
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, num_heads: int, d_model: int, head_size: int, block_size: int, dropout: float):
+    def __init__(self, d_model: int, num_heads: int, block_size: int, dropout: float):
         super().__init__()
+        head_size = d_model // num_heads
         self.heads = nn.ModuleList([
-            Head(d_model, head_size, block_size, dropout) for _ in range(num_heads)
+            Head(d_model, head_size, block_size, dropout)
+            for _ in range(num_heads)
         ])
-        self.proj = nn.Linear(num_heads * head_size, d_model)
+        self.proj = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -62,11 +64,10 @@ class FeedForward(nn.Module):
 class TransformerBlock(nn.Module):
     def __init__(self, d_model: int, num_heads: int, block_size: int, dropout: float):
         super().__init__()
-        head_size = d_model // num_heads
-        self.sa = MultiHeadAttention(num_heads, d_model, head_size, block_size, dropout)
-        self.ffwd = FeedForward(d_model, dropout)
         self.ln1 = nn.LayerNorm(d_model)
         self.ln2 = nn.LayerNorm(d_model)
+        self.sa = MultiHeadAttention(d_model, num_heads, block_size, dropout)
+        self.ffwd = FeedForward(d_model, dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x + self.sa(self.ln1(x))
@@ -78,17 +79,17 @@ class MIDITransformer(nn.Module):
     def __init__(
         self,
         vocab_size: int,
-        d_model: int = 256,
         block_size: int = 128,
+        d_model: int = 256,
         n_heads: int = 8,
-        n_layers: int = 6,
+        n_layers: int = 4,
         dropout: float = 0.2,
     ):
         super().__init__()
         self.block_size = block_size
 
-        self.token_embedding_table = nn.Embedding(vocab_size, d_model)
-        self.position_embedding_table = nn.Embedding(block_size, d_model)
+        self.token_embedding = nn.Embedding(vocab_size, d_model)
+        self.position_embedding = nn.Embedding(block_size, d_model)
 
         self.blocks = nn.Sequential(*[
             TransformerBlock(d_model, n_heads, block_size, dropout)
@@ -101,13 +102,14 @@ class MIDITransformer(nn.Module):
     def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None):
         B, T = idx.shape
 
-        tok_emb = self.token_embedding_table(idx)  # (B, T, C)
-        pos_emb = self.position_embedding_table(torch.arange(T, device=idx.device))  # (T, C)
-        x = tok_emb + pos_emb
+        tok_emb = self.token_embedding(idx)
+        pos = torch.arange(T, device=idx.device)
+        pos_emb = self.position_embedding(pos)
 
+        x = tok_emb + pos_emb
         x = self.blocks(x)
         x = self.ln_f(x)
-        logits = self.lm_head(x)  # (B, T, vocab_size)
+        logits = self.lm_head(x)
 
         loss = None
         if targets is not None:
@@ -119,12 +121,17 @@ class MIDITransformer(nn.Module):
         return logits, loss
 
     @torch.no_grad()
-    def generate(self, idx: torch.Tensor, max_new_tokens: int):
+    def generate(self, idx: torch.Tensor, end_token_id: int, max_new_tokens: int = 200):
         for _ in range(max_new_tokens):
             idx_cond = idx[:, -self.block_size:]
             logits, _ = self(idx_cond)
-            logits = logits[:, -1, :]  # only last timestep
-            probs = F.softmax(logits, dim=-1)
-            idx_next = torch.multinomial(probs, num_samples=1)
-            idx = torch.cat((idx, idx_next), dim=1)
+            logits = logits[:, -1, :]
+            probs = torch.softmax(logits, dim=-1)
+            next_id = torch.multinomial(probs, num_samples=1)
+
+            idx = torch.cat((idx, next_id), dim=1)
+
+            if next_id.item() == end_token_id:
+                break
+
         return idx
