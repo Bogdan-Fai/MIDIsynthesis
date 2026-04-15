@@ -32,7 +32,7 @@ def generate(task=None):
         dropout=0.2,
     ).to(device)
 
-    model.load_state_dict(torch.load("Data/midi_transformer.pt", map_location=device))
+    model.load_state_dict(torch.load("Data/outputs/midi_transformer.pt", map_location=device))
     model.eval()
 
     start_token = stoi["START"]

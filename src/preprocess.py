@@ -2,7 +2,7 @@
 import os
 import numpy as np
 
-def preprocess(midis_path):
+def preprocess(midis_path, task=None):
     from Services.tokenizer import Tokenizer
     if not os.path.exists(midis_path):
         print(f"Path '{midis_path}' doesn't exist!")

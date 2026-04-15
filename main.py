@@ -1,12 +1,14 @@
-import sys
-from clearml import Task, task
+import argparse
+from clearml import Task
 
+from Services.midi_service import play_midi
 from src.preprocess import preprocess
 from src.train import train
 from src.generate import generate
 
+
 def setup_clearml(command_name: str):
-    task = Task.init(
+    return Task.init(
         project_name="MIDIsynthesis",
         task_name=f"{command_name}_run",
         tags=["transformer", "midi"],
@@ -15,28 +17,33 @@ def setup_clearml(command_name: str):
         auto_resource_monitoring=True,
         auto_connect_streams=True,
     )
-    return task
+
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  python main.py preprocess")
-        print("  python main.py train")
-        print("  python main.py generate")
-        return
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="train",
+        choices=["preprocess", "train", "generate", "last"]
+    )
+    args = parser.parse_args()
+    command = args.command
 
-    command = sys.argv[1].lower()
-    task = setup_clearml(command)
+    if command in ["preprocess", "train", "generate"]:
+        task = setup_clearml(command)
+        task.connect(args)
+    else:
+        task = None
 
     if command == "preprocess":
-        preprocess("Data/MIDI")
+        preprocess("Data/MIDI", task=task)
     elif command == "train":
         train(task=task)
     elif command == "generate":
         generate(task=task)
-    else:
-        print(f"Unknown command: {command}")
-        print("Available commands: preprocess, train, generate")
+    elif command == "last":
+        play_midi("Data/outputs/generated.mid")
 
 
 if __name__ == "__main__":
