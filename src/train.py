@@ -12,24 +12,54 @@ from src.model import MIDITransformer
 
 def load_vocab(path: str):
     with open(path, "r", encoding="utf-8") as f:
-        vocab = json.load(f)
-    return vocab
+        return json.load(f)
 
 
-def train(task=None):
+def save_checkpoint(task, model, optimizer, epoch, config, vocab_size, best_val_loss):
+    output_dir = Path("Data/outputs")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    ckpt_path = output_dir / f"checkpoint_epoch_{epoch + 1}.pt"
+
+    torch.save(
+        {
+            "epoch": epoch + 1,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "config": dict(config),
+            "vocab_size": vocab_size,
+            "best_val_loss": best_val_loss,
+        },
+        ckpt_path,
+    )
+
+    task.upload_artifact(
+        name=f"checkpoint_epoch_{epoch + 1}",
+        artifact_object=str(ckpt_path),
+    )
+
+
+def load_checkpoint(resume_task_id: str, resume_artifact_name: str, device: str):
+    prev_task = Task.get_task(task_id=resume_task_id)
+    ckpt_path = prev_task.artifacts[resume_artifact_name].get_local_copy()
+    checkpoint = torch.load(ckpt_path, map_location=device)
+    return checkpoint
+
+
+def train(task=None, resume_task_id=None, resume_artifact_name=None):
     if task is None:
         task = Task.current_task()
 
     config = {
         "block_size": 128,
         "batch_size": 32,
-        "epochs": 10,
+        "epochs": 15,
         "lr": 3e-4,
         "d_model": 256,
         "n_heads": 8,
         "n_layers": 4,
         "dropout": 0.2,
-        "num_workers": 4,
+        "num_workers": 0,
     }
 
     config = task.connect(config, name="Hyperparameters")
@@ -51,8 +81,6 @@ def train(task=None):
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
-    print(f"Training set size: {len(train_dataset)}")
 
     train_loader = DataLoader(
         train_dataset,
@@ -80,9 +108,24 @@ def train(task=None):
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"])
 
+    start_epoch = 0
     best_val_loss = float("inf")
 
-    for epoch in range(config["epochs"]):
+    if resume_task_id and resume_artifact_name:
+        checkpoint = load_checkpoint(
+            resume_task_id=resume_task_id,
+            resume_artifact_name=resume_artifact_name,
+            device=device,
+        )
+
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        start_epoch = checkpoint["epoch"]
+        best_val_loss = checkpoint.get("best_val_loss", float("inf"))
+
+        print(f"Resume from epoch {start_epoch}")
+
+    for epoch in range(start_epoch, config["epochs"]):
         print(f"Epoch {epoch + 1}/{config['epochs']}")
         logger.report_text(f"Epoch {epoch + 1}/{config['epochs']}")
 
@@ -101,15 +144,10 @@ def train(task=None):
 
             train_loss_sum += loss.item()
 
-            if step % 50 == 0:
-                current_loss = loss.item()
-                print(f"step {step}/{len(train_loader)} | loss={current_loss:.4f}")
-                logger.report_scalar(
-                    title="Loss",
-                    series="train",
-                    value=current_loss,
-                    iteration=epoch * len(train_loader) + step
-                )
+            if step % 20 == 0:
+                iteration = epoch * len(train_loader) + step
+                logger.report_scalar("Loss", "train", loss.item(), iteration)
+                logger.report_text(f"alive | epoch={epoch + 1} step={step}")
 
         avg_train_loss = train_loss_sum / len(train_loader)
 
@@ -123,6 +161,7 @@ def train(task=None):
                 val_loss_sum += loss.item()
 
         avg_val_loss = val_loss_sum / len(val_loader)
+        best_val_loss = min(best_val_loss, avg_val_loss)
 
         print(
             f"Epoch {epoch + 1}/{config['epochs']} | "
@@ -132,13 +171,20 @@ def train(task=None):
         logger.report_scalar("Loss", "train_avg", avg_train_loss, epoch)
         logger.report_scalar("Loss", "val_avg", avg_val_loss, epoch)
 
-        best_val_loss = min(best_val_loss, avg_val_loss)
+        save_checkpoint(
+            task=task,
+            model=model,
+            optimizer=optimizer,
+            epoch=epoch,
+            config=config,
+            vocab_size=len(stoi),
+            best_val_loss=best_val_loss,
+        )
 
     output_dir = Path("Data/outputs")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    model_path = output_dir / "midi_transformer.pt"
-
+    final_model_path = output_dir / "midi_transformer_final.pt"
     torch.save(
         {
             "model_state_dict": model.state_dict(),
@@ -146,13 +192,14 @@ def train(task=None):
             "vocab_size": len(stoi),
             "best_val_loss": best_val_loss,
         },
-        model_path,
+        final_model_path,
     )
 
-    task.upload_artifact(
-        name="Final_Model",
-        artifact_object=str(model_path),
-    )
+    task.upload_artifact("Final_Model", artifact_object=str(final_model_path))
 
     print("Training finished. Model saved.")
     print(f"Task ID: {task.id}")
+
+
+if __name__ == "__main__":
+    train()

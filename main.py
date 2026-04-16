@@ -25,8 +25,11 @@ def main():
         "command",
         nargs="?",
         default="train",
-        choices=["preprocess", "train", "generate", "last"]
+        choices=["preprocess", "train", "generate", "last"],
     )
+    parser.add_argument("--resume-task-id", type=str, default=None)
+    parser.add_argument("--resume-artifact-name", type=str, default=None)
+
     args = parser.parse_args()
     command = args.command
 
@@ -38,10 +41,17 @@ def main():
 
     if command == "preprocess":
         preprocess("Data/MIDI", task=task)
+
     elif command == "train":
-        train(task=task)
+        train(
+            task=task,
+            resume_task_id=args.resume_task_id,
+            resume_artifact_name=args.resume_artifact_name,
+        )
+
     elif command == "generate":
         generate(task=task)
+
     elif command == "last":
         play_midi("Data/outputs/generated.mid")
 
