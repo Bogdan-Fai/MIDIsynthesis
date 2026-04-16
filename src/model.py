@@ -121,11 +121,32 @@ class MIDITransformer(nn.Module):
         return logits, loss
 
     @torch.no_grad()
-    def generate(self, idx: torch.Tensor, end_token_id: int, max_new_tokens: int = 200):
+    def generate(
+        self,
+        idx: torch.Tensor,
+        end_token_id: int,
+        max_new_tokens: int = 200,
+        temperature: float = 1.0,
+        top_k: int | None = 20,
+    ):
         for _ in range(max_new_tokens):
             idx_cond = idx[:, -self.block_size:]
             logits, _ = self(idx_cond)
             logits = logits[:, -1, :]
+
+            # temperature
+            logits = logits / temperature
+
+            # top-k filtering
+            if top_k is not None:
+                values, _ = torch.topk(logits, top_k)
+                min_topk = values[:, -1].unsqueeze(-1)
+                logits = torch.where(
+                    logits < min_topk,
+                    torch.full_like(logits, float("-inf")),
+                    logits
+                )
+
             probs = torch.softmax(logits, dim=-1)
             next_id = torch.multinomial(probs, num_samples=1)
 
