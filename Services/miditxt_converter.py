@@ -94,6 +94,10 @@ def make_midi_stream(tokens):
     s = stream.Stream()
 
     for tok in tokens:
+        # Skip unknown tokens
+        if tok.startswith("UNKNOWN_"):
+            continue
+
         if tok.split("_").__len__() == 2:  # note like C4_0.5
             n = note.Note(pitch=tok.split("_")[0])
             if tok.split("_")[1].find("/") != -1:

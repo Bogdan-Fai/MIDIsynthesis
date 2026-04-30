@@ -29,6 +29,7 @@ def main():
     )
     parser.add_argument("--resume-task-id", type=str, default=None)
     parser.add_argument("--resume-artifact-name", type=str, default=None)
+    parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible generation")
 
     args = parser.parse_args()
     command = args.command
@@ -50,7 +51,7 @@ def main():
         )
 
     elif command == "generate":
-        generate(task=task)
+        generate(task=task, seed=args.seed)
 
     elif command == "last":
         play_midi("Data/outputs/generated.mid")
