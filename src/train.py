@@ -60,6 +60,7 @@ def train(task=None, resume_task_id=None, resume_artifact_name=None):
         "n_layers": 4,
         "dropout": 0.2,
         "num_workers": 0,
+        "weight_decay": 1e-2,
     }
 
     config = task.connect(config, name="Hyperparameters")
@@ -78,9 +79,10 @@ def train(task=None, resume_task_id=None, resume_artifact_name=None):
     dataset = MIDIDataset(token_ids, config["block_size"])
 
     print(f"Dataset size: {len(dataset)}")
-    train_size = int(0.9 * len(dataset))
-    val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    split_idx = int(0.9 * len(token_ids))
+
+    train_dataset = token_ids[:split_idx]
+    val_dataset = token_ids[split_idx:]
 
     train_loader = DataLoader(
         train_dataset,
@@ -106,7 +108,11 @@ def train(task=None, resume_task_id=None, resume_artifact_name=None):
         dropout=config["dropout"],
     ).to(device)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"])
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=config["lr"],
+        weight_decay=config["weight_decay"],
+    )
 
     start_epoch = 0
     best_val_loss = float("inf")
