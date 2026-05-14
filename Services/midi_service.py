@@ -1,3 +1,7 @@
+from datetime import datetime
+from pathlib import Path
+
+
 def play_midi(path):
     import pygame
 
@@ -9,6 +13,23 @@ def play_midi(path):
 
     while pygame.mixer.music.get_busy():
         continue
+
+def play_midi_from_stream(s):
+    import tempfile
+    import os
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mid") as tmp:
+        s.write("midi", fp=tmp.name)
+        play_midi(tmp.name)
+        os.unlink(tmp.name)
+
+def save_midi_from_stream(s, path="Outputs"):
+    output_dir = Path(path)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    date_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    midi_path = output_dir / f"generated_{date_time}.mid"
+    s.write("midi", fp=midi_path)
+    return midi_path
 
 def see_notes(path):
     from music21 import converter, note, chord

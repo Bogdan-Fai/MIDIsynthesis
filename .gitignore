@@ -3,12 +3,12 @@
 venv/
 
 # Python cache
+Services/__pycache__/
 __pycache__/
 *.pyc
 
 # Data
 Data/*
-!Data/test.mid
 !Data/readme.txt
 
 # OS
