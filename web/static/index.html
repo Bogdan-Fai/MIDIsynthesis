@@ -355,7 +355,11 @@
                     `;
 
                     // Вызов API
-                    const response = await fetch(`/api/generate?seed=${seed}`, {
+                    const url = seed === null
+                        ? '/api/generate'
+                        : `/api/generate?seed=${seed}`;
+
+                    const response = await fetch(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -375,6 +379,7 @@
                         timestamp: new Date().toISOString(),
                         file_path: data.file_path,
                         download_url: data.download_url,
+                        audio_url: data.audio_url,
                         from_cache: data.from_cache || false
                     };
 
@@ -434,8 +439,8 @@
                         </div>
 
                         <audio class="audio-player" controls>
-                            <source src="${data.download_url}" type="audio/midi">
-                            Ваш браузер не поддерживает воспроизведение MIDI. <a href="${data.download_url}" download>Скачайте файл</a> для прослушивания.
+                            <source src="${data.audio_url}" type="audio/wav">
+                            Ваш браузер не поддерживает воспроизведение мелодии. <a href="${data.download_url}" download>Скачайте файл</a> для прослушивания.
                         </audio>
 
                         <div style="margin-top: 15px; text-align: center;">

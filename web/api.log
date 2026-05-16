@@ -39,3 +39,48 @@ FileNotFoundError: [Errno 2] No such file or directory: 'Data/outputs/midi_trans
 2026-05-16 17:10:28,849 - web.main - INFO - Added to cache for seed: 100
 2026-05-16 17:10:29,980 - web.main - INFO - Attempting to download file: generated_20260516_171028.mid
 2026-05-16 17:10:29,981 - web.main - INFO - Successfully downloaded file: generated_20260516_171028.mid
+2026-05-16 21:33:02,876 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 21:36:53,623 - __main__ - INFO - Starting music generation with seed: 1
+2026-05-16 21:36:58,697 - __main__ - INFO - Successfully generated music: Data/outputs/generated_20260516_213658.mid
+2026-05-16 21:36:58,697 - __main__ - INFO - Added to cache for seed: 1
+2026-05-16 21:38:52,999 - __main__ - INFO - Attempting to download file: generated_20260516_213658.mid
+2026-05-16 21:38:52,999 - __main__ - INFO - Successfully downloaded file: generated_20260516_213658.mid
+2026-05-16 21:40:56,864 - __main__ - INFO - Starting music generation with seed: 1
+2026-05-16 21:40:56,864 - __main__ - INFO - Cache hit for seed: 1
+2026-05-16 21:40:56,864 - __main__ - INFO - Returning cached result for seed: 1
+2026-05-16 22:43:35,175 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 22:43:44,732 - __main__ - INFO - Starting music generation with seed: None
+2026-05-16 22:43:48,716 - __main__ - INFO - Successfully generated music: Data/outputs/generated_20260516_224348.mid
+2026-05-16 22:43:48,716 - __main__ - ERROR - Error generating music: name 'wav_file' is not defined
+Traceback (most recent call last):
+  File "/Users/macaronin/Works/MIDIsynthesis/web/main.py", line 158, in generate_music
+    "audio_url": f"/api/audio/{wav_file.name}",
+                               ^^^^^^^^
+NameError: name 'wav_file' is not defined. Did you mean: 'wavfile'?
+2026-05-16 22:45:57,136 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 22:46:16,926 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 22:47:08,127 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 22:49:22,394 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 22:49:28,827 - __main__ - INFO - Starting music generation with seed: None
+2026-05-16 22:49:31,346 - __main__ - INFO - Successfully generated music: Data/outputs/generated_20260516_224930.mid
+2026-05-16 23:00:35,607 - __main__ - INFO - Attempting to download file: generated_20260516_224930.mid
+2026-05-16 23:00:35,608 - __main__ - INFO - Successfully downloaded file: generated_20260516_224930.mid
+2026-05-16 23:03:20,933 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 23:03:25,904 - __main__ - INFO - Starting music generation with seed: None
+2026-05-16 23:03:29,059 - __main__ - INFO - Successfully generated music: Data/outputs/generated_20260516_230328.mid
+2026-05-16 23:12:25,256 - __main__ - INFO - Attempting to download file: generated_20260516_230328.mid
+2026-05-16 23:12:25,256 - __main__ - INFO - Successfully downloaded file: generated_20260516_230328.mid
+2026-05-16 23:44:12,555 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 23:44:23,504 - __main__ - INFO - Starting music generation with seed: None
+2026-05-16 23:44:27,911 - __main__ - INFO - Converted MIDI to WAV: Data/outputs/audio/generated_20260516_234427.wav
+2026-05-16 23:44:27,917 - __main__ - INFO - Successfully generated music: Data/outputs/generated_20260516_234427.mid
+2026-05-16 23:44:27,922 - __main__ - INFO - Attempting to play audio file: Data/outputs/audio/generated_20260516_234427.wav
+2026-05-16 23:44:29,725 - __main__ - INFO - Attempting to play audio file: Data/outputs/audio/generated_20260516_234427.wav
+2026-05-16 23:44:29,728 - __main__ - INFO - Attempting to play audio file: Data/outputs/audio/generated_20260516_234427.wav
+2026-05-16 23:47:04,853 - __main__ - INFO - Starting MIDIsynthesis API server
+2026-05-16 23:47:10,449 - __main__ - INFO - Starting music generation with seed: None
+2026-05-16 23:47:13,139 - __main__ - INFO - Converted MIDI to WAV with piano sound: Data/outputs/audio/generated_20260516_234712.wav
+2026-05-16 23:47:13,146 - __main__ - INFO - Successfully generated music: Data/outputs/generated_20260516_234712.mid
+2026-05-16 23:47:13,152 - __main__ - INFO - Attempting to play audio file: Data/outputs/audio/generated_20260516_234712.wav
+2026-05-16 23:47:15,026 - __main__ - INFO - Attempting to play audio file: Data/outputs/audio/generated_20260516_234712.wav
+2026-05-16 23:47:15,030 - __main__ - INFO - Attempting to play audio file: Data/outputs/audio/generated_20260516_234712.wav
