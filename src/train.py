@@ -53,12 +53,12 @@ def train(task=None, resume_task_id=None, resume_artifact_name=None):
     config = {
         "block_size": 128,
         "batch_size": 32,
-        "epochs": 15,
-        "lr": 3e-4,
+        "epochs": 8,
+        "lr": 1e-4,
         "d_model": 256,
         "n_heads": 8,
         "n_layers": 4,
-        "dropout": 0.2,
+        "dropout": 0.3,
         "num_workers": 0,
         "weight_decay": 1e-2,
     }
@@ -81,8 +81,18 @@ def train(task=None, resume_task_id=None, resume_artifact_name=None):
     print(f"Dataset size: {len(dataset)}")
     split_idx = int(0.9 * len(token_ids))
 
-    train_dataset = token_ids[:split_idx]
-    val_dataset = token_ids[split_idx:]
+    train_tokens = token_ids[:split_idx]
+    val_tokens = token_ids[split_idx:]
+
+    train_dataset = MIDIDataset(
+        train_tokens,
+        config["block_size"]
+    )
+
+    val_dataset = MIDIDataset(
+        val_tokens,
+        config["block_size"]
+    )
 
     train_loader = DataLoader(
         train_dataset,

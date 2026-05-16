@@ -51,11 +51,11 @@ def main():
         )
 
     elif command == "generate":
-        # generate(task=task, seed=args.seed)
-        generate(task=task)
+        generate(path="../../Downloads/midi_transformer_final (2).pt" ,task=task, seed=None)
+        # generate(task=task)
 
     elif command == "last":
-        play_midi("Data/outputs/generated.mid")
+        play_midi("Data/outputs/generated_20260514_161733.mid")
 
 
 if __name__ == "__main__":

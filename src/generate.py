@@ -2,6 +2,7 @@ import json
 import numpy as np
 import torch
 from src.model import MIDITransformer
+from clearml import Task
 
 def load_vocab(vocab_path: str):
     with open(vocab_path, "r", encoding="utf-8") as f:
@@ -37,25 +38,54 @@ def decode_tokens(token_ids, itos):
     return decoded
 
 
-def generate(task=None, seed=None):
+def generate(path="Data/outputs/midi_transformer_final_1.pt", task=None, seed=None):
     from Services.midi_service import save_midi_from_stream, play_midi_from_stream
     from Services.miditxt_converter import make_midi_stream
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger = task.get_logger() if task is not None else None
-
-    # Set random seed if provided
-    if seed is not None:
-        import random
-        random.seed(seed)
-        np.random.seed(seed)
-        torch.manual_seed(seed)
-        if device == "cuda":
-            torch.cuda.manual_seed_all(seed)
+    import random
+    import time
 
     stoi, itos = load_vocab("Data/vocab.json")
 
-    checkpoint = torch.load("Data/outputs/midi_transformer_final_1.pt", map_location=device)
+
+    seed = int(time.time() * 1_000_000) % (2**32)
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    candidate_tokens = [
+        token for token in stoi.keys()
+        if token not in ["START", "END"]
+    ]
+
+    random_start_token = random.choice(candidate_tokens)
+
+    generate_parameters = {
+        "start_token": [stoi["START"], stoi[random_start_token]],
+        "end_token_id": stoi["END"],
+        "max_new_tokens": 256,
+        "temperature": 1.8,
+        "top_k": 100,
+    }
+    print("Prompt token:", random_start_token)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # logger = task.get_logger() if task is not None else None
+
+    prev_task = Task.get_task(task_id="bfd1f69da2804b99931848ab93d852eb")
+    model_path = prev_task.artifacts["Final_Model"].get_local_copy()
+    checkpoint = torch.load(model_path, map_location=device)
+
+    # Set random seed if provided
+    # if seed is not None:
+    #     import random
+    #     random.seed(seed)
+    #     np.random.seed(seed)
+    #     torch.manual_seed(seed)
+    #     if device == "cuda":
+    #         torch.cuda.manual_seed_all(seed)
+
+    # checkpoint = torch.load(path , map_location=device)
     saved_config = checkpoint["config"]
 
     model = MIDITransformer(
@@ -70,16 +100,7 @@ def generate(task=None, seed=None):
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
-
-    generate_parameters = {
-        "start_token": [stoi["START"], stoi["A2_C#3_E3_G3_2.0"]],
-        "end_token_id": stoi["END"],
-        "max_new_tokens": 256,
-        "temperature": 0.9,
-        "top_k": 16
-    }
-
-    generate_parameters = task.connect(generate_parameters, name="Generation Parameters") if task else generate_parameters
+    # generate_parameters = task.connect(generate_parameters, name="Generation Parameters") if task else generate_parameters
 
     context = torch.tensor([generate_parameters["start_token"]], dtype=torch.long, device=device)
 
@@ -96,7 +117,7 @@ def generate(task=None, seed=None):
 
     midi_path = save_midi_from_stream(make_midi_stream(tokens), path="Data/outputs")
 
-    if logger:
-        logger.report_text("Generation completed, saved to: " + str(midi_path))
+    # if logger:
+    #     logger.report_text("Generation completed, saved to: " + str(midi_path))
     if task:
         task.upload_artifact(name="data", artifact_object=midi_path)

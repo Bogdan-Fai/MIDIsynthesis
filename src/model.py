@@ -126,30 +126,47 @@ class MIDITransformer(nn.Module):
         idx: torch.Tensor,
         end_token_id: int,
         max_new_tokens: int = 200,
-        temperature: float = 1.0,
-        top_k: int | None = 20,
+        temperature: float = 1.2,
+        top_k: int | None = 50,
     ):
+        if temperature <= 0:
+            raise ValueError("temperature must be > 0")
+
         for _ in range(max_new_tokens):
             idx_cond = idx[:, -self.block_size:]
             logits, _ = self(idx_cond)
             logits = logits[:, -1, :]
 
-            # temperature
+            # temperature применяется один раз
             logits = logits / temperature
 
-            # top-k filtering
             if top_k is not None:
-                values, _ = torch.topk(logits, top_k)
-                min_topk = values[:, -1].unsqueeze(-1)
-                logits = torch.where(
-                    logits < min_topk,
-                    torch.full_like(logits, float("-inf")),
-                    logits
-                )
+                top_k = min(top_k, logits.size(-1))
 
-            temperature = 1.1
-            probs = torch.softmax(logits / temperature, dim=-1)
-            next_id = torch.multinomial(probs, num_samples=1)
+                # берём только top-k кандидатов
+                values, indices = torch.topk(logits, k=top_k, dim=-1)
+
+                probs = torch.softmax(values, dim=-1)
+
+                # debug: настоящие token_id
+                top_probs, top_positions = torch.topk(probs, k=min(5, top_k), dim=-1)
+                print("Top probabilities:")
+                for p, pos in zip(top_probs[0].tolist(), top_positions[0].tolist()):
+                    token_id = indices[0, pos].item()
+                    print(f"token_id={token_id}, prob={p:.4f}")
+
+                sampled_position = torch.multinomial(probs, num_samples=1)
+                next_id = indices.gather(-1, sampled_position)
+
+            else:
+                probs = torch.softmax(logits, dim=-1)
+
+                top_probs, top_indices = torch.topk(probs, k=5, dim=-1)
+                print("Top probabilities:")
+                for p, token_id in zip(top_probs[0].tolist(), top_indices[0].tolist()):
+                    print(f"token_id={token_id}, prob={p:.4f}")
+
+                next_id = torch.multinomial(probs, num_samples=1)
 
             idx = torch.cat((idx, next_id), dim=1)
 
