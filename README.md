@@ -177,6 +177,8 @@ curl -OJ "http://localhost:8000/api/download/generated_20260516_170834.mid"
 ### Доступ к интерфейсу
 Откройте в браузере:
 ```
+http://localhost:8003/static/index.html
+или
 http://localhost:8000/static/index.html
 ```
 
