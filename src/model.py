@@ -147,7 +147,8 @@ class MIDITransformer(nn.Module):
                     logits
                 )
 
-            probs = torch.softmax(logits, dim=-1)
+            temperature = 1.1
+            probs = torch.softmax(logits / temperature, dim=-1)
             next_id = torch.multinomial(probs, num_samples=1)
 
             idx = torch.cat((idx, next_id), dim=1)

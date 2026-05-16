@@ -10,7 +10,7 @@ from src.generate import generate
 def setup_clearml(command_name: str):
     return Task.init(
         project_name="MIDIsynthesis",
-        task_name=f"{command_name}_run",
+        task_name=f"{command_name}_run_with_regularization",
         tags=["transformer", "midi"],
         auto_connect_arg_parser=True,
         auto_connect_frameworks=True,
@@ -51,7 +51,8 @@ def main():
         )
 
     elif command == "generate":
-        generate(task=task, seed=args.seed)
+        # generate(task=task, seed=args.seed)
+        generate(task=task)
 
     elif command == "last":
         play_midi("Data/outputs/generated.mid")

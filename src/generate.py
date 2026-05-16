@@ -55,7 +55,7 @@ def generate(task=None, seed=None):
 
     stoi, itos = load_vocab("Data/vocab.json")
 
-    checkpoint = torch.load("Data/outputs/midi_transformer_final.pt", map_location=device)
+    checkpoint = torch.load("Data/outputs/midi_transformer_final_1.pt", map_location=device)
     saved_config = checkpoint["config"]
 
     model = MIDITransformer(
