@@ -1,0 +1,41 @@
+2026-05-16 16:57:49,177 - web.main - INFO - Starting MIDIsynthesis API server
+2026-05-16 16:58:23,592 - web.main - INFO - Starting music generation with seed: 999
+2026-05-16 16:58:24,227 - web.main - ERROR - Error generating music: [Errno 2] No such file or directory: 'Data/outputs/midi_transformer_final_1.pt'
+Traceback (most recent call last):
+  File "c:\Users\Bogda\Desktop\,\коды\MIDIsynthesis\web\main.py", line 108, in generate_music
+    generate(task=None, seed=seed)
+  File "c:\Users\Bogda\Desktop\,\коды\MIDIsynthesis\src\generate.py", line 58, in generate
+    checkpoint = torch.load("Data/outputs/midi_transformer_final_1.pt", map_location=device)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bogda\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\serialization.py", line 1319, in load
+    with _open_file_like(f, "rb") as opened_file:
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bogda\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\serialization.py", line 659, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bogda\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\torch\serialization.py", line 640, in __init__
+    super().__init__(open(name, mode))
+                     ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'Data/outputs/midi_transformer_final_1.pt'
+2026-05-16 16:59:33,714 - web.main - INFO - Starting music generation with seed: 111
+2026-05-16 16:59:37,262 - web.main - INFO - Successfully generated music: Data/outputs\generated_20260516_165937.mid
+2026-05-16 16:59:37,263 - web.main - INFO - Added to cache for seed: 111
+2026-05-16 16:59:45,790 - web.main - INFO - Starting music generation with seed: 111
+2026-05-16 16:59:45,791 - web.main - INFO - Cache hit for seed: 111
+2026-05-16 16:59:45,791 - web.main - INFO - Returning cached result for seed: 111
+2026-05-16 17:07:34,438 - web.main - INFO - Starting MIDIsynthesis API server
+2026-05-16 17:08:30,272 - web.main - INFO - Starting music generation with seed: 111
+2026-05-16 17:08:34,460 - web.main - INFO - Successfully generated music: Data/outputs\generated_20260516_170834.mid
+2026-05-16 17:08:34,460 - web.main - INFO - Added to cache for seed: 111
+2026-05-16 17:08:49,406 - web.main - INFO - Attempting to download file: generated_20260516_170834.mid
+2026-05-16 17:08:49,407 - web.main - INFO - Successfully downloaded file: generated_20260516_170834.mid
+2026-05-16 17:09:40,059 - web.main - INFO - Starting music generation with seed: 111
+2026-05-16 17:09:40,060 - web.main - INFO - Cache hit for seed: 111
+2026-05-16 17:09:40,060 - web.main - INFO - Returning cached result for seed: 111
+2026-05-16 17:09:41,821 - web.main - INFO - Attempting to download file: generated_20260516_170834.mid
+2026-05-16 17:09:41,821 - web.main - INFO - Successfully downloaded file: generated_20260516_170834.mid
+2026-05-16 17:10:21,085 - web.main - INFO - Starting music generation with seed: 100
+2026-05-16 17:10:28,848 - web.main - INFO - Successfully generated music: Data/outputs\generated_20260516_171028.mid
+2026-05-16 17:10:28,849 - web.main - INFO - Added to cache for seed: 100
+2026-05-16 17:10:29,980 - web.main - INFO - Attempting to download file: generated_20260516_171028.mid
+2026-05-16 17:10:29,981 - web.main - INFO - Successfully downloaded file: generated_20260516_171028.mid

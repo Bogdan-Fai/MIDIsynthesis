@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import sys
 import os
 import logging
@@ -79,6 +80,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Настройка статических файлов
+app.mount("/static", StaticFiles(directory="web/static"), name="static")
 
 @app.post("/api/generate")
 async def generate_music(seed: Optional[int] = None):
