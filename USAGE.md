@@ -26,7 +26,7 @@ python main.py generate --seed 123 --temperature 0.8 --top_k 20
 python main.py last
 
 # ИЛИ укажите конкретный файл
-python -c "from Services.midi_service import play_midi; play_midi('Data/outputs/generated_20260428_185950.mid')"
+python main.py last --path Data\outputs\generated_20260428_185950.mid
 ```
 
 #### Вариант 2: Использование внешнего проигрывателя
@@ -62,21 +62,15 @@ ls Data/outputs/*.mid
 **Решения:**
 
 1. **Используйте конкретное имя файла**:
+
    ```bash
-   python -c "from Services.midi_service import play_midi; play_midi('Data/outputs/generated_20260428_185950.mid')"
+   python main.py last --path Data\outputs\generated_20260428_185950.mid
    ```
 
 2. **Откройте файл вручную**:
+
    ```bash
    start Data\outputs\generated_20260428_185950.mid
-   ```
-
-3. **Или измените код** (в файле `main.py`):
-   ```python
-   # Замените строку 57:
-   # play_midi("Data/outputs/generated.mid")
-   # на:
-   play_midi("Data/outputs/generated_20260428_185950.mid")  # или используйте последний файл
    ```
 
 ## Работа с рабочими директориями
@@ -101,6 +95,7 @@ python main.py generate
 - `--max_new_tokens`: Максимальное количество токенов для генерации (по умолчанию 256)
 
 Пример:
+
 ```bash
 python main.py generate --seed 42 --temperature 0.8 --top_k 20 --max_new_tokens 512
 ```
@@ -151,17 +146,20 @@ start Data\outputs\generated_*.mid
 
 **Q: Почему моя мелодия звучит монотонно?**
 A: Это может происходить, если модель генерирует много неизвестных токенов. Попробуйте:
+
 - Использовать другой seed
 - Изменить параметры температуры и top_k
 - Убедиться, что у вас последний vocab.json
 
 **Q: Как воспроизвести MIDI файл на Windows?**
 A: Вы можете:
+
 1. Дважды кликнуть на файл .mid в Проводнике
 2. Использовать команду `start file.mid`
 3. Установить специализированный проигрыватель (например, VLC, Windows Media Player)
 
 **Q: Можно ли экспортировать в другие форматы?**
 A: Да, вы можете конвертировать MIDI в другие форматы с помощью инструментов как:
+
 - `timidity file.mid -Ow -o file.wav` (для WAV)
 - `ffmpeg -i file.mid -c:a libmp3lame file.mp3` (для MP3)
