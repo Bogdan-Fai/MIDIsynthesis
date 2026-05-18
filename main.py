@@ -1,5 +1,6 @@
 import argparse
 from clearml import Task
+import os
 
 from Services.midi_service import play_midi
 from src.preprocess import preprocess
@@ -30,6 +31,7 @@ def main():
     parser.add_argument("--resume-task-id", type=str, default=None)
     parser.add_argument("--resume-artifact-name", type=str, default=None)
     parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducible generation")
+    parser.add_argument("--path", type=str, default=None, help="Path to MIDI file for playing (used with 'last' command)")
 
     args = parser.parse_args()
     command = args.command
@@ -55,7 +57,16 @@ def main():
         generate(task=task)
 
     elif command == "last":
-        play_midi("Data/outputs/generated.mid")
+        if args.path:
+            midi_path = args.path
+        else:
+            directory = "Data/outputs"
+            list_of_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith(".mid")]
+            if not list_of_files:
+                print("No MIDI files found in the outputs directory.")
+                return
+            midi_path = max(list_of_files, key=os.path.getctime)
+        play_midi(midi_path)
 
 
 if __name__ == "__main__":

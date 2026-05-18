@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import torch
+from clearml import Task
 from src.model import MIDITransformer
 
 def load_vocab(vocab_path: str):
@@ -54,8 +55,12 @@ def generate(task=None, seed=None):
             torch.cuda.manual_seed_all(seed)
 
     stoi, itos = load_vocab("Data/vocab.json")
-
-    checkpoint = torch.load("Data/outputs/midi_transformer_final_1.pt", map_location=device)
+    try:
+        prev_task = Task.get_task(task_id="bfd1f69da2804b99931848ab93d852eb")
+        model_path = prev_task.artifacts["Final_Model"].get_local_copy()
+        checkpoint = torch.load(model_path, map_location=device)
+    except:
+        checkpoint = torch.load("Data/outputs/midi_transformer_final.pt", map_location=device)
     saved_config = checkpoint["config"]
 
     model = MIDITransformer(

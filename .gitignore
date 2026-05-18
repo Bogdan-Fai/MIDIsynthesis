@@ -17,3 +17,6 @@ Data/*
 # IDE
 .vscode/
 .idea/
+
+# Logs
+web/api.log
